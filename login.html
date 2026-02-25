@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | Network Security</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top, #0f172a, #020617);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e5e7eb;
+            margin: 0;
+        }
+
+        .login-card {
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 20px;
+            padding: 95px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 0 70px rgba(0, 0, 0, 0.75);
+        }
+
+        .soc-badge {
+            display: inline-block;
+            border: 1px solid #1e293b;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #38bdf8;
+            margin-bottom: 20px;
+        }
+
+        h3, p {
+            text-align: center;
+        }
+
+        p {
+            color: #9ca3af;
+            margin-bottom: 30px;
+        }
+
+        /* ROLE ICON BAR */
+        .role-bar {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .role-box {
+            flex: 1;
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            color: #9ca3af;
+            text-decoration: none;
+            background: #020617;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .role-box:hover {
+            color: #38bdf8;
+            border-color: #38bdf8;
+            background: rgba(56,189,248,0.05);
+            transform: translateY(-4px);
+        }
+
+        .role-box span {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .role-box.active {
+            color: #38bdf8;
+            border-color: #38bdf8;
+            background: rgba(56,189,248,0.08);
+            box-shadow: 0 0 0 2px rgba(56,189,248,0.2) inset;
+        }
+
+        .form-control {
+            background: #020617;
+            border: 1px solid #1e293b;
+            color: #e5e7eb;
+        }
+
+        .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: none;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            border: none;
+            padding: 12px;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .footer-text {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 30px;
+        }
+
+        .footer-icons {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 25px;
+        }
+
+        .footer-icons img {
+            width: 28px;
+            transition: 0.2s;
+        }
+
+        .footer-icons img:hover {
+            transform: scale(1.15);
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+
+    <div class="text-center">
+        <span class="soc-badge">INDIAN AIR FORCE</span>
+    </div>
+
+    <h3>Network Security Login</h3>
+    <p>Authorized access only. All activities are monitored.</p>
+
+    <!-- 🔐 ADMIN / USER ICON BAR -->
+    <div class="role-bar">
+        <button type="button" class="role-box" data-role="admin">
+            <span>🛡</span>
+            <strong>Admin Login</strong>
+            <div class="small">Security Administrator</div>
+        </button>
+
+        <button type="button" class="role-box active" data-role="user">
+            <span>👤</span>
+            <strong>User Login</strong>
+            <div class="small">Authorized User</div>
+        </button>
+    </div>
+
+    <!-- LOGIN FORM (Backend handled by Flask) -->
+    <form method="POST" action="/login">
+        <input type="hidden" name="role" id="selected-role" value="user">
+
+        <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" placeholder="Enter your username" required>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+        </div>
+
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary">
+                Authenticate & Access
+            </button>
+        </div>
+    </form>
+
+    <div class="footer-text">
+        © 2026 Security Operations Center<br>
+        Live Network Access Control & Threat Prevention
+    </div>
+
+    <!-- SOCIAL LOGIN ICONS -->
+    <div class="footer-icons">
+        <a href="https://accounts.google.com/signin" target="_blank">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg">
+        </a>
+        <a href="https://login.microsoftonline.com/" target="_blank">
+            <img src="https://www.svgrepo.com/show/452062/microsoft.svg">
+        </a>
+        <a href="https://github.com/login" target="_blank">
+            <img src="https://www.svgrepo.com/show/475654/github-color.svg">
+        </a>
+    </div>
+
+</div>
+
+<script>
+    const roleButtons = document.querySelectorAll(".role-box[data-role]");
+    const roleInput = document.getElementById("selected-role");
+    const savedRole = localStorage.getItem("selectedRole");
+
+    if (savedRole === "admin" || savedRole === "user") {
+        roleInput.value = savedRole;
+    }
+
+    roleButtons.forEach((button) => {
+        if (button.dataset.role === roleInput.value) {
+            button.classList.add("active");
+        } else {
+            button.classList.remove("active");
+        }
+
+        button.addEventListener("click", () => {
+            const selectedRole = button.dataset.role;
+            roleInput.value = selectedRole;
+            localStorage.setItem("selectedRole", selectedRole);
+
+            roleButtons.forEach((b) => b.classList.remove("active"));
+            button.classList.add("active");
+        });
+    });
+</script>
+
+</body>
+</html>
