@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SOC Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/soc-theme.css') }}">
+    <style>
+        .soc-main h5,
+        .soc-main h6 {
+            color: #ffffff !important;
+        }
+
+        .soc-main .small-muted {
+            color: #ffffff !important;
+        }
+
+        #logs-body td,
+        #logs-body td * {
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+<body class="soc-page">
+<div id="soc-page-loader" class="soc-loader">
+    <div class="soc-loader-ring"></div>
+    <div>Initializing SOC Admin Console...</div>
+</div>
+
+<nav class="navbar soc-topbar">
+    <div class="container-fluid d-flex align-items-center justify-content-between gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-secondary btn-sm d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminMobileSidebar" aria-controls="adminMobileSidebar">
+                ☰
+            </button>
+            <span class="soc-brand">
+                <span class="soc-brand-dot"></span>
+                SOC Threat Detection & Response
+            </span>
+        </div>
+        <a href="/logout" class="btn btn-danger btn-sm">Logout</a>
+    </div>
+</nav>
+
+<div class="container-fluid soc-shell">
+    <div class="row g-0">
+        <aside class="col-md-3 col-lg-2 d-none d-md-block soc-sidebar">
+            <nav class="nav flex-column">
+                <a class="nav-link active" href="/overview.html" style="color: #ffffff;">📊 Overview</a>
+                <a class="nav-link" href="/admin/threat-alerts">🚨 Threat Alerts</a>
+                <a class="nav-link" href="/admin/network-monitoring">📡 Network Monitoring</a>
+                <a class="nav-link" href="/admin/endpoint-activity">🖥 Endpoint Activity</a>
+                <a class="nav-link" href="/admin/logs-forensics">📋 Logs & Forensics</a>
+                <a class="nav-link" href="/admin/blocked-ips">🚫 Blocked IPs</a>
+                <a class="nav-link" href="/logout">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <main class="col-12 col-md-9 col-lg-10 soc-main">
+            <div class="mb-3">
+                <h4 class="soc-title">Security Operations Center - Admin View</h4>
+                <p class="soc-subtitle">Real-time monitoring, threat detection, and automated mitigation</p>
+            </div>
+
+            <div class="row soc-grid-gap mt-1">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card soc-card soc-hover-card p-3 h-100">
+                        <h6 class="mb-2">Total Events</h6>
+                        <div class="soc-metric soc-metric-primary" id="total-events">0</div>
+                        <span class="small-muted">Authentication and network events</span>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card soc-card soc-hover-card p-3 h-100">
+                        <h6 class="mb-2">Threat Alerts</h6>
+                        <div class="soc-metric soc-metric-critical" id="threat-alerts">0</div>
+                        <span class="small-muted">High-risk detections</span>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card soc-card soc-hover-card p-3 h-100">
+                        <h6 class="mb-2">Active Sessions</h6>
+                        <div class="soc-metric soc-metric-ok" id="active-devices">0</div>
+                        <span class="small-muted" id="active-devices-note">Active user sessions in last 5 min</span>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card soc-card soc-hover-card p-3 h-100">
+                        <h6 class="mb-2">Network Status</h6>
+                        <div class="soc-metric ok" id="network-status">SECURE</div>
+                        <span class="small-muted" id="network-status-note">No active breach</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card soc-card p-4 mt-3">
+                <div class="soc-card-header flex-wrap">
+                    <div>
+                        <h5 class="mb-1">📈 Live Traffic Analysis</h5>
+                        <p class="small-muted mb-0">Authentication and access events per minute (last 30 minutes)</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="small-muted">Current Throughput</div>
+                        <div class="soc-metric soc-metric-primary" id="traffic-current">0/min</div>
+                    </div>
+                </div>
+                <div class="soc-traffic-wrap mt-3">
+                    <canvas id="traffic-canvas"></canvas>
+                </div>
+                <p class="small-muted mt-2 mb-0" id="traffic-updated-at">Traffic stream pending...</p>
+            </div>
+
+            <div class="card soc-card p-4 mt-3">
+                <h5>🚨 Active Threat Detection</h5>
+                <p class="small-muted mb-0">Correlated from login behavior, IP reputation, traffic anomalies, and endpoint signals</p>
+
+                <div id="threats-container" class="mt-3">
+                    <div class="threat-item ok">
+                        <strong class="ok">No Active Threats</strong>
+                        <p class="mb-1">No suspicious activity currently detected.</p>
+                        <div class="threat-meta"><strong>User ID:</strong> N/A | <strong>IP:</strong> N/A</div>
+                        <span class="small-muted">Detection Source: SOC Correlation Engine</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card soc-card p-4 mt-3">
+                <h5>🚫 Automated Mitigation - Blocked IPs</h5>
+                <p class="small-muted mb-0">Auto-block policy: 7 failed login attempts within 10 minutes.</p>
+                <div class="table-responsive mt-3">
+                    <table class="table table-soc table-striped table-hover table-bordered table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>IP Address</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blocked-body">
+                            <tr>
+                                <td colspan="3" class="text-center small-muted">No blocked IPs.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card soc-card p-4 mt-3">
+                <h5>📋 Authentication & Access Logs</h5>
+                <p class="small-muted mb-0" id="live-updated-at">
+                    Live update pending... Note: Stores all authentication & access logs of users here.
+                </p>
+                <div class="table-responsive mt-3">
+                    <table class="table table-soc table-striped table-hover table-bordered table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User ID</th>
+                                <th>IP Address</th>
+                                <th>Event Type</th>
+                                <th>Endpoint</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-body">
+                            <tr>
+                                <td colspan="8" class="text-center small-muted">No authentication or access events yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <p class="soc-footer">© 2026 Security Operations Center | Live Network Access Control & Threat Prevention</p>
+        </main>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-start soc-offcanvas" tabindex="-1" id="adminMobileSidebar" aria-labelledby="adminMobileSidebarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="adminMobileSidebarLabel">Admin Navigation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <nav class="nav flex-column">
+            <a class="nav-link active" href="/overview.html" style="color: #ffffff;">📊 Overview</a>
+            <a class="nav-link" href="/admin/threat-alerts">🚨 Threat Alerts</a>
+            <a class="nav-link" href="/admin/network-monitoring">📡 Network Monitoring</a>
+            <a class="nav-link" href="/admin/endpoint-activity">🖥 Endpoint Activity</a>
+            <a class="nav-link" href="/admin/logs-forensics">📋 Logs & Forensics</a>
+            <a class="nav-link" href="/admin/blocked-ips">🚫 Blocked IPs</a>
+            <a class="nav-link" href="/logout">🚪 Logout</a>
+        </nav>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/soc-ux.js') }}"></script>
+<script>
+    const totalEventsEl = document.getElementById("total-events");
+    const threatAlertsEl = document.getElementById("threat-alerts");
+    const activeDevicesEl = document.getElementById("active-devices");
+    const activeDevicesNoteEl = document.getElementById("active-devices-note");
+    const networkStatusEl = document.getElementById("network-status");
+    const networkStatusNoteEl = document.getElementById("network-status-note");
+    const threatsContainerEl = document.getElementById("threats-container");
+    const logsBodyEl = document.getElementById("logs-body");
+    const blockedBodyEl = document.getElementById("blocked-body");
+    const updatedAtEl = document.getElementById("live-updated-at");
+    const trafficCanvasEl = document.getElementById("traffic-canvas");
+    const trafficCurrentEl = document.getElementById("traffic-current");
+    const trafficUpdatedAtEl = document.getElementById("traffic-updated-at");
+    let lastTrafficSeries = [];
+
+    const IST_TIME_ZONE = "Asia/Kolkata";
+    const IST_DATE_TIME_FORMATTER = new Intl.DateTimeFormat("en-IN", {
+        timeZone: IST_TIME_ZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+    });
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+    }
+
+    function formatTimestampToIst(timestampValue) {
+        if (!timestampValue) {
+            return "-";
+        }
+
+        const raw = String(timestampValue).trim();
+        if (!raw) {
+            return "-";
+        }
+
+        const isoCandidate = raw.includes("T") ? raw : raw.replace(" ", "T");
+        let parsedDate = new Date(`${isoCandidate}Z`);
+        if (Number.isNaN(parsedDate.getTime())) {
+            parsedDate = new Date(raw);
+        }
+        if (Number.isNaN(parsedDate.getTime())) {
+            return raw;
+        }
+
+        return `${IST_DATE_TIME_FORMATTER.format(parsedDate)} IST`;
+    }
+
+    function drawTrafficGraph(points) {
+        if (!trafficCanvasEl) {
+            return;
+        }
+
+        const context = trafficCanvasEl.getContext("2d");
+        if (!context) {
+            return;
+        }
+
+        const rect = trafficCanvasEl.getBoundingClientRect();
+        const width = Math.max(300, Math.floor(rect.width || 300));
+        const height = 260;
+        const dpr = window.devicePixelRatio || 1;
+
+        trafficCanvasEl.width = Math.floor(width * dpr);
+        trafficCanvasEl.height = Math.floor(height * dpr);
+        trafficCanvasEl.style.height = `${height}px`;
+
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+        context.clearRect(0, 0, width, height);
+
+        const chart = {
+            left: 48,
+            right: 16,
+            top: 16,
+            bottom: 34
+        };
+        const chartWidth = width - chart.left - chart.right;
+        const chartHeight = height - chart.top - chart.bottom;
+        const usablePoints = Array.isArray(points) ? points : [];
+        const counts = usablePoints.map((point) => Number(point.count) || 0);
+        const maxCount = Math.max(1, ...counts);
+
+        context.strokeStyle = "rgba(148, 163, 184, 0.36)";
+        context.lineWidth = 1;
+        context.strokeRect(chart.left, chart.top, chartWidth, chartHeight);
+
+        context.font = "11px Sora, sans-serif";
+        context.fillStyle = "rgba(219, 234, 254, 0.75)";
+        context.textAlign = "right";
+
+        for (let index = 0; index <= 4; index += 1) {
+            const y = chart.top + (chartHeight * index) / 4;
+            const scaleValue = Math.round(maxCount - (maxCount * index) / 4);
+            context.beginPath();
+            context.moveTo(chart.left, y);
+            context.lineTo(width - chart.right, y);
+            context.strokeStyle = "rgba(148, 163, 184, 0.22)";
+            context.stroke();
+            context.fillText(String(scaleValue), chart.left - 8, y + 4);
+        }
+
+        if (!usablePoints.length) {
+            context.textAlign = "center";
+            context.fillStyle = "rgba(219, 234, 254, 0.78)";
+            context.fillText("No traffic data yet", chart.left + chartWidth / 2, chart.top + chartHeight / 2);
+            return;
+        }
+
+        const stepX = usablePoints.length > 1 ? chartWidth / (usablePoints.length - 1) : 0;
+        const coordinates = usablePoints.map((point, index) => {
+            const count = Number(point.count) || 0;
+            const x = chart.left + stepX * index;
+            const y = chart.top + chartHeight - (count / maxCount) * chartHeight;
+            return { x, y };
+        });
+
+        if (coordinates.length >= 2) {
+            const gradient = context.createLinearGradient(0, chart.top, 0, chart.top + chartHeight);
+            gradient.addColorStop(0, "rgba(56, 189, 248, 0.42)");
+            gradient.addColorStop(1, "rgba(56, 189, 248, 0.03)");
+
+            context.beginPath();
+            context.moveTo(coordinates[0].x, coordinates[0].y);
+            coordinates.slice(1).forEach((point) => {
+                context.lineTo(point.x, point.y);
+            });
+            context.lineTo(coordinates[coordinates.length - 1].x, chart.top + chartHeight);
+            context.lineTo(coordinates[0].x, chart.top + chartHeight);
+            context.closePath();
+            context.fillStyle = gradient;
+            context.fill();
+        }
+
+        context.beginPath();
+        context.moveTo(coordinates[0].x, coordinates[0].y);
+        coordinates.slice(1).forEach((point) => {
+            context.lineTo(point.x, point.y);
+        });
+        context.strokeStyle = "#38bdf8";
+        context.lineWidth = 2;
+        context.stroke();
+
+        const latestPoint = coordinates[coordinates.length - 1];
+        context.beginPath();
+        context.arc(latestPoint.x, latestPoint.y, 4, 0, Math.PI * 2);
+        context.fillStyle = "#38bdf8";
+        context.fill();
+
+        context.beginPath();
+        context.arc(latestPoint.x, latestPoint.y, 8, 0, Math.PI * 2);
+        context.strokeStyle = "rgba(56, 189, 248, 0.36)";
+        context.lineWidth = 2;
+        context.stroke();
+
+        context.fillStyle = "rgba(219, 234, 254, 0.76)";
+        context.textAlign = "center";
+        const labelStep = Math.max(1, Math.floor(usablePoints.length / 6));
+        usablePoints.forEach((point, index) => {
+            if (index % labelStep !== 0 && index !== usablePoints.length - 1) {
+                return;
+            }
+            const x = chart.left + stepX * index;
+            context.fillText(String(point.label || ""), x, height - 10);
+        });
+    }
+
+    function renderLogs(logs) {
+        if (!logs.length) {
+            logsBodyEl.innerHTML = "<tr><td colspan='8' class='text-center small-muted'>No authentication or access events yet.</td></tr>";
+            return;
+        }
+
+        logsBodyEl.innerHTML = logs.map((log) => {
+            const status = String(log.status || "UNKNOWN").toUpperCase();
+            let badge = "<span class='badge badge-warning'>UNKNOWN</span>";
+            if (status === "SUCCESS") {
+                badge = "<span class='badge badge-success'>SUCCESS</span>";
+            } else if (status === "FAILED" || status === "DENIED") {
+                badge = `<span class='badge badge-danger'>${status}</span>`;
+            } else if (status === "ERROR") {
+                badge = "<span class='badge badge-warning'>ERROR</span>";
+            }
+
+            return `
+                <tr>
+                    <td>${log.id}</td>
+                    <td>${escapeHtml(log.username)}</td>
+                    <td>${escapeHtml(log.ip_address)}</td>
+                    <td>${escapeHtml(log.event_type || "UNKNOWN_EVENT")}</td>
+                    <td>${escapeHtml(log.endpoint || "unknown")}</td>
+                    <td>${badge}</td>
+                    <td>${escapeHtml(log.details || "-")}</td>
+                    <td>${escapeHtml(formatTimestampToIst(log.timestamp))}</td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    function renderBlocked(blocked) {
+        if (!blocked.length) {
+            blockedBodyEl.innerHTML = "<tr><td colspan='3' class='text-center small-muted'>No blocked IPs.</td></tr>";
+            return;
+        }
+
+        blockedBodyEl.innerHTML = blocked.map((item) => {
+            const ipAddress = String(item.ip_address || "");
+            const encodedIp = encodeURIComponent(ipAddress);
+            return `
+                <tr>
+                    <td>${item.id}</td>
+                    <td>${escapeHtml(ipAddress)}</td>
+                    <td>
+                        <span class='badge badge-danger me-2'>AUTO-BLOCKED</span>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-success unblock-ip-btn"
+                            data-ip="${encodedIp}"
+                        >
+                            Unblock
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    async function unblockIp(ipAddress) {
+        const response = await fetch("/api/admin/unblock-ip", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({ ip_address: ipAddress })
+        });
+
+        let payload = {};
+        try {
+            payload = await response.json();
+        } catch (error) {
+            payload = {};
+        }
+
+        if (!response.ok) {
+            const reason = payload.error ? ` (${payload.error})` : "";
+            throw new Error(`Unable to unblock ${ipAddress}${reason}`);
+        }
+    }
+
+    async function confirmUnblock(ipAddress) {
+        if (window.Swal && typeof window.Swal.fire === "function") {
+            const result = await window.Swal.fire({
+                icon: "warning",
+                title: "Unblock IP Address?",
+                text: `${ipAddress} will be removed from active block list.`,
+                showCancelButton: true,
+                confirmButtonText: "Yes, Unblock",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#22c55e",
+                cancelButtonColor: "#64748b",
+                customClass: {
+                    popup: "soc-swal-popup"
+                }
+            });
+            return result.isConfirmed;
+        }
+        return window.confirm(`Unblock IP ${ipAddress}?`);
+    }
+
+    blockedBodyEl.addEventListener("click", async (event) => {
+        const trigger = event.target.closest(".unblock-ip-btn");
+        if (!trigger) {
+            return;
+        }
+
+        const encodedIp = trigger.getAttribute("data-ip") || "";
+        const ipAddress = decodeURIComponent(encodedIp);
+        if (!ipAddress) {
+            return;
+        }
+
+        const proceed = await confirmUnblock(ipAddress);
+        if (!proceed) {
+            return;
+        }
+
+        trigger.disabled = true;
+        try {
+            await unblockIp(ipAddress);
+            updatedAtEl.textContent = `Admin action: ${ipAddress} was unblocked. Refreshing data...`;
+            await refreshOverview();
+            await refreshTrafficSeries();
+            if (window.socToast) {
+                window.socToast({ icon: "success", title: `Unblocked ${ipAddress}` });
+            }
+        } catch (error) {
+            updatedAtEl.textContent = `Admin action failed: ${error.message}`;
+            if (window.socAlert) {
+                window.socAlert({ icon: "error", title: "Unblock Failed", text: error.message });
+            }
+            trigger.disabled = false;
+        }
+    });
+
+    function normalizeSeverity(value) {
+        if (value === "critical" || value === "warn" || value === "ok") {
+            return value;
+        }
+        return "warn";
+    }
+
+    function renderThreats(threats) {
+        if (!threats.length) {
+            threatsContainerEl.innerHTML = `
+                <div class="threat-item ok">
+                    <strong class="ok">No Active Threats</strong>
+                    <p class="mb-1">No suspicious activity currently detected.</p>
+                    <div class="threat-meta"><strong>User ID:</strong> N/A | <strong>IP:</strong> N/A</div>
+                    <span class="small-muted">Detection Source: SOC Correlation Engine</span>
+                </div>
+            `;
+            return;
+        }
+
+        threatsContainerEl.innerHTML = threats.map((threat) => {
+            const severity = normalizeSeverity(threat.severity);
+            const name = escapeHtml(threat.threat_name || "Unknown Threat");
+            const description = escapeHtml(threat.description || "Threat signal detected.");
+            const userId = escapeHtml(threat.user_id || "unknown");
+            const ip = escapeHtml(threat.ip_address || "unknown");
+            const source = escapeHtml(threat.detection_source || "Security Analytics");
+            const time = escapeHtml(formatTimestampToIst(threat.timestamp || "now"));
+
+            return `
+                <div class="threat-item ${severity}">
+                    <strong class="${severity}">${name}</strong>
+                    <p class="mb-1">${description}</p>
+                    <div class="threat-meta"><strong>User ID:</strong> ${userId} | <strong>IP:</strong> ${ip}</div>
+                    <span class="small-muted">Detection Source: ${source} | Time: ${time}</span>
+                </div>
+            `;
+        }).join("");
+    }
+
+    async function refreshOverview() {
+        try {
+            const response = await fetch("/api/admin/overview", {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            totalEventsEl.textContent = data.total_events;
+            threatAlertsEl.textContent = data.threat_alerts;
+            activeDevicesEl.textContent = data.active_devices;
+            if (typeof data.active_window_minutes === "number") {
+                activeDevicesNoteEl.textContent = `Active user sessions in last ${data.active_window_minutes} min`;
+            }
+            networkStatusEl.textContent = data.network_status || "SECURE";
+            networkStatusNoteEl.textContent = data.network_status_note || "No active breach";
+            networkStatusEl.classList.remove("ok", "warn", "critical");
+            networkStatusEl.classList.add(data.network_status_class || "ok");
+            renderThreats(data.threats || []);
+            renderLogs(data.logs || []);
+            renderBlocked(data.blocked || []);
+            updatedAtEl.textContent =
+                `Live update (IST): ${formatTimestampToIst(new Date().toISOString())} | Note: Stores all authentication & access logs of users here.`;
+        } catch (error) {
+            updatedAtEl.textContent =
+                "Live update paused (connection issue). Note: Stores all authentication & access logs of users here.";
+        }
+    }
+
+    async function refreshTrafficSeries() {
+        try {
+            const response = await fetch("/api/admin/traffic-series", {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            const points = Array.isArray(data.points) ? data.points : [];
+            lastTrafficSeries = points;
+            drawTrafficGraph(points);
+
+            if (trafficCurrentEl) {
+                trafficCurrentEl.textContent = `${Number(data.latest_events_per_minute || 0)}/min`;
+            }
+            if (trafficUpdatedAtEl) {
+                trafficUpdatedAtEl.textContent =
+                    `Traffic updated (IST): ${formatTimestampToIst(new Date().toISOString())} | Last ${Number(data.window_minutes || 30)} min | Peak ${Number(data.peak_events_per_minute || 0)}/min`;
+            }
+        } catch (error) {
+            if (trafficUpdatedAtEl) {
+                trafficUpdatedAtEl.textContent = "Traffic stream paused (connection issue).";
+            }
+        }
+    }
+
+    window.addEventListener("resize", () => {
+        if (!lastTrafficSeries.length) {
+            return;
+        }
+        drawTrafficGraph(lastTrafficSeries);
+    });
+
+    async function refreshDashboard() {
+        await Promise.all([refreshOverview(), refreshTrafficSeries()]);
+    }
+
+    refreshDashboard();
+    setInterval(refreshDashboard, 5000);
+</script>
+<script src="/session-timeout.js"></script>
+</body>
+</html>
