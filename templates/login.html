@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Secure Access Gateway</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.4);
+            --glass-border: rgba(56, 189, 248, 0.2);
+            --primary: #0ea5e9;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(2, 132, 199, 0.15), transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.15), transparent 40%),
+                linear-gradient(rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 1)),
+                url('data:image/svg+xml;utf8,<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h40v40H0z" fill="none"/><path d="M0 39.5h40M39.5 0v40" stroke="rgba(56, 189, 248, 0.03)" stroke-width="1"/></svg>');
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Container */
+        .auth-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1000px;
+            margin: 2rem;
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.9),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            animation: containerEntry 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes containerEntry {
+            0% {
+                opacity: 0;
+                transform: translateY(40px) scale(0.98);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Brand Panel */
+        .brand-section {
+            padding: 4rem;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(2, 6, 23, 0.9) 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .brand-section::after {
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(14, 165, 233, 0.1) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        .brand-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(14, 165, 233, 0.15);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+            }
+
+            100% {
+                box-shadow: 0 0 30px rgba(14, 165, 233, 0.6);
+                transform: scale(1.05);
+            }
+        }
+
+        .logo-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .brand-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(180deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-subtitle {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 3rem;
+        }
+
+        /* Status Indicator */
+        .sys-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 12px;
+            width: fit-content;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #10b981, 0 0 20px #10b981;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .status-text {
+            font-family: 'Space Grotesk', monospace;
+            font-size: 0.8rem;
+            color: #10b981;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* Form Area */
+        .form-section {
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            background: rgba(15, 23, 42, 0.2);
+        }
+
+        .form-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .form-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .form-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Role Selector */
+        .role-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2.5rem;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 0.4rem;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .role-btn {
+            flex: 1;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 0.8rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .role-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .role-btn.active {
+            background: rgba(14, 165, 233, 0.15);
+            border-color: rgba(56, 189, 248, 0.3);
+            color: var(--accent);
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.2);
+        }
+
+        /* Inputs */
+        .input-group-custom {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: var(--text-main);
+            padding: 1.25rem 1.25rem 1.25rem 3.5rem;
+            border-radius: 12px;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            background: rgba(15, 23, 42, 0.9);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15), inset 0 0 10px rgba(56, 189, 248, 0.05);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: rgba(148, 163, 184, 0.4);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+            font-size: 1.2rem;
+            pointer-events: none;
+        }
+
+        .form-control:focus+.input-icon {
+            color: var(--accent);
+        }
+
+        /* Error Alert */
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-left: 4px solid var(--danger);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+            backdrop-filter: blur(4px);
+        }
+
+        .alert-error svg {
+            flex-shrink: 0;
+        }
+
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: translate3d(-1px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: translate3d(2px, 0, 0);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translate3d(-4px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: translate3d(4px, 0, 0);
+            }
+        }
+
+        /* Submit Button */
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
+            color: white;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            padding: 1.25rem;
+            border-radius: 12px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            box-shadow: 0 10px 20px -5px rgba(14, 165, 233, 0.3);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(14, 165, 233, 0.5);
+            border-color: var(--accent);
+            background: linear-gradient(135deg, #1e3a8a 0%, var(--primary) 100%);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* Footer */
+        .form-footer {
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-family: monospace;
+            opacity: 0.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .auth-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+                margin: 1rem;
+            }
+
+            .brand-section {
+                padding: 3rem 2rem;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .brand-title {
+                font-size: 2.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .form-section {
+                padding: 3rem 2rem;
+            }
+
+            .sys-status {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="auth-container">
+
+        <!-- Brand / Identity Section -->
+        <div class="brand-section">
+            <div>
+                <div class="brand-logo">
+                    <div class="logo-icon">🛡️</div>
+                    <div class="logo-text">Airforce Network Monitoring</div>
+                </div>
+
+                <h1 class="brand-title">Network Access & Threat Prevention</h1>
+
+            </div>
+
+            <div class="sys-status">
+                <div class="status-dot"></div>
+                <div class="status-text">Uplink Nominal &bull; Active Defense Online</div>
+            </div>
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="form-section">
+            <div class="form-header">
+                <h2 class="form-title">Secure Login</h2>
+                <div class="form-subtitle">Verify operational clearance to proceed</div>
+            </div>
+
+            <form method="POST" action="/login" id="authForm">
+                <input type="hidden" name="role" id="roleInput" value="user">
+
+                <!-- Conditional Error Display -->
+                {% if error %}
+                <div class="alert-error">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                        </path>
+                    </svg>
+                    <span>{{ error }}</span>
+                </div>
+                {% endif %}
+
+                <!-- Role Toggles -->
+                <div class="role-selector">
+                    <button type="button" class="role-btn" data-role="admin">Admin</button>
+                    <button type="button" class="role-btn active" data-role="user">Employee</button>
+                </div>
+
+                <!-- Credentials -->
+                <div class="input-group-custom">
+                    <input type="text" id="username" name="username" class="form-control"
+                        placeholder="Operator Callsign (Username)" required autocomplete="username">
+                    <div class="input-icon">👤</div>
+                </div>
+
+                <div class="input-group-custom">
+                    <input type="password" id="password" name="password" class="form-control"
+                        placeholder="Decryption Key (Password)" required autocomplete="current-password">
+                    <div class="input-icon">🔑</div>
+                </div>
+
+                <button type="submit" class="btn-submit">Login</button>
+            </form>
+
+
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const roleBtns = document.querySelectorAll('.role-btn');
+            const roleInput = document.getElementById('roleInput');
+
+            // Retain last selected role via localStorage
+            const savedRole = localStorage.getItem('soc_clearance') || 'user';
+            roleInput.value = savedRole;
+
+            roleBtns.forEach(btn => {
+                // Initial active state setup
+                if (btn.dataset.role === savedRole) {
+                    roleBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                }
+
+                // Click event
+                btn.addEventListener('click', () => {
+                    roleBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const selected = btn.dataset.role;
+                    roleInput.value = selected;
+                    localStorage.setItem('soc_clearance', selected);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

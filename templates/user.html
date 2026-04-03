@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SOC User Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/soc-theme.css') }}">
+    <style>
+        :root {
+            --userdash-cyan: #22d3ee;
+            --userdash-teal: #14b8a6;
+            --userdash-amber: #f59e0b;
+        }
+
+        .userdash-hero {
+            position: relative;
+            border-color: rgba(34, 211, 238, 0.28);
+            background:
+                radial-gradient(circle at 8% 14%, rgba(34, 211, 238, 0.18), transparent 36%),
+                radial-gradient(circle at 88% -6%, rgba(20, 184, 166, 0.22), transparent 34%),
+                linear-gradient(145deg, rgba(5, 14, 28, 0.92), rgba(4, 18, 34, 0.95));
+        }
+
+        .userdash-hero::after {
+            content: "";
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            right: -120px;
+            bottom: -120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(34, 211, 238, 0.18), transparent 72%);
+            pointer-events: none;
+        }
+
+        .userdash-eyebrow {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #a3e3ff;
+            margin-bottom: 0.45rem;
+            font-weight: 600;
+        }
+
+        .userdash-hero-meta {
+            display: grid;
+            justify-items: end;
+            gap: 0.4rem;
+            text-align: right;
+            color: #d3ecff;
+        }
+
+        .userdash-session-id {
+            font-size: 0.8rem;
+            color: #9cc2de;
+            letter-spacing: 0.03em;
+        }
+
+        .userdash-live-time {
+            font-size: 0.82rem;
+            color: #b8d4ed;
+        }
+
+        .userdash-kpi-card {
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 14px;
+            background: rgba(5, 16, 30, 0.72);
+            padding: 0.85rem;
+            height: 100%;
+        }
+
+        .userdash-kpi-label {
+            color: #a5bfdc;
+            font-size: 0.78rem;
+            letter-spacing: 0.03em;
+        }
+
+        .userdash-kpi-value {
+            margin-top: 0.15rem;
+            font-size: 1.45rem;
+            font-weight: 700;
+            line-height: 1.15;
+            color: #f0f8ff;
+        }
+
+        .userdash-kpi-note {
+            margin-top: 0.2rem;
+            font-size: 0.76rem;
+            color: #8faecc;
+        }
+
+        .userdash-hero .soc-title,
+        .userdash-section-title {
+            color: #ffffff !important;
+        }
+
+        .userdash-note,
+        .userdash-kpi-note,
+        .userdash-health-note {
+            color: #ffffff !important;
+        }
+
+        .userdash-health-item + .userdash-health-item {
+            margin-top: 0.75rem;
+        }
+
+        .userdash-health-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.86rem;
+            color: #d9ecff;
+            margin-bottom: 0.34rem;
+        }
+
+        .userdash-health-bar {
+            height: 8px;
+            width: 100%;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.22);
+            overflow: hidden;
+        }
+
+        .userdash-health-bar > span {
+            display: block;
+            width: calc(var(--score, 0) * 1%);
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--userdash-cyan), var(--userdash-teal));
+        }
+
+        .userdash-health-note {
+            margin-top: 0.85rem;
+            font-size: 0.8rem;
+            color: #8fb0cf;
+        }
+
+        .userdash-timeline {
+            list-style: none;
+            margin: 0.95rem 0 0;
+            padding: 0;
+        }
+
+        .userdash-timeline li {
+            position: relative;
+            padding-left: 1.18rem;
+            padding-bottom: 0.9rem;
+            font-size: 0.84rem;
+            color: #dbeeff;
+        }
+
+        .userdash-timeline li:last-child {
+            padding-bottom: 0;
+        }
+
+        .userdash-timeline li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.34rem;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--userdash-cyan);
+            box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.18);
+        }
+
+        .userdash-timeline li:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            left: 3px;
+            top: 0.86rem;
+            width: 2px;
+            height: calc(100% - 0.18rem);
+            background: rgba(148, 163, 184, 0.35);
+        }
+
+        .userdash-time {
+            display: block;
+            margin-top: 0.2rem;
+            color: #8eaed0;
+            font-size: 0.75rem;
+        }
+
+        .userdash-policy-list {
+            list-style: none;
+            margin: 0.9rem 0 0;
+            padding: 0;
+            display: grid;
+            gap: 0.6rem;
+        }
+
+        .userdash-policy-list li {
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            border-radius: 12px;
+            background: rgba(8, 22, 41, 0.72);
+            padding: 0.72rem 0.82rem;
+            font-size: 0.83rem;
+            color: #daebff;
+        }
+
+        .userdash-action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.7rem;
+            margin-top: 0.95rem;
+        }
+
+        .userdash-action-grid .btn {
+            text-align: left;
+            padding: 0.72rem 0.8rem;
+        }
+
+        .userdash-signal-strip {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.6rem;
+            margin-top: 0.85rem;
+        }
+
+        .userdash-signal {
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(5, 15, 30, 0.7);
+            padding: 0.6rem;
+            text-align: center;
+        }
+
+        .userdash-signal-label {
+            font-size: 0.73rem;
+            color: #94b4d5;
+        }
+
+        .userdash-signal-value {
+            margin-top: 0.15rem;
+            font-size: 0.92rem;
+            color: #ebf6ff;
+            font-weight: 600;
+        }
+
+        @media (max-width: 991.98px) {
+            .userdash-hero-meta {
+                justify-items: start;
+                text-align: left;
+                margin-top: 0.7rem;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .userdash-signal-strip {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+<body class="soc-page">
+<div id="soc-page-loader" class="soc-loader">
+    <div class="soc-loader-ring"></div>
+    <div>Loading User Operations Dashboard...</div>
+</div>
+
+<nav class="navbar soc-topbar">
+    <div class="container-fluid d-flex align-items-center justify-content-between gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-secondary btn-sm d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#userMobileSidebar" aria-controls="userMobileSidebar">
+                ☰
+            </button>
+            <span class="soc-brand">
+                <span class="soc-brand-dot"></span>
+                SOC Secure Network Portal
+            </span>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+            <span class="small text-secondary">User: <strong>{{ session.get('username', 'Operator-01') }}</strong></span>
+            <a href="/userdashboard" class="btn btn-primary btn-sm">✈ Flight Plans</a>
+            <a href="/logout" class="btn btn-danger btn-sm">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid soc-shell">
+    <div class="row g-0">
+        <aside class="col-md-3 col-lg-2 d-none d-md-block soc-sidebar">
+            <nav class="nav flex-column">
+                <a class="nav-link active" href="/userdashboard">📊 Dashboard</a>
+                <a class="nav-link" href="/user/network-status">📡 Network Status</a>
+                <a class="nav-link" href="/landing_control.html">🛬 Landing & Runway Control</a>
+                <a class="nav-link" href="/alerts_warnings.html">🚨 Alerts & Warnings</a>
+                <a class="nav-link" href="#" aria-disabled="true">🛡 Security Policy</a>
+                <a class="nav-link" href="/logout">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <main class="col-12 col-md-9 col-lg-10 soc-main">
+            <div class="card soc-card p-4 userdash-hero">
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-8">
+                        <div class="userdash-eyebrow">Flight Operations Security Dashboard</div>
+                        <h4 class="soc-title mb-1">Welcome, {{ session.get('username', 'Operator-01') }}</h4>
+                        <p class="soc-subtitle mb-0 userdash-note">
+                            Real-time operational visibility for your authenticated airport network session.
+                        </p>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="userdash-hero-meta">
+                            <span class="soc-status-chip ok">SESSION VERIFIED</span>
+                            <span class="userdash-live-time">Live Sync: <span id="userdash-live-time">--</span></span>
+                            <span class="userdash-session-id">Session ID: USR-OPS-{{ session.get('username', 'Operator-01') }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="userdash-signal-strip">
+                    <div class="userdash-signal">
+                        <div class="userdash-signal-label">Network Segment</div>
+                        <div class="userdash-signal-value">ATC-SEC-A</div>
+                    </div>
+                    <div class="userdash-signal">
+                        <div class="userdash-signal-label">Gateway Latency</div>
+                        <div class="userdash-signal-value">18 ms</div>
+                    </div>
+                    <div class="userdash-signal">
+                        <div class="userdash-signal-label">MFA Assurance</div>
+                        <div class="userdash-signal-value">Level 3</div>
+                    </div>
+                    <div class="userdash-signal">
+                        <div class="userdash-signal-label">Policy Revision</div>
+                        <div class="userdash-signal-value">v2026.2</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-1">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="userdash-kpi-card">
+                        <div class="userdash-kpi-label">Identity Trust Score</div>
+                        <div class="userdash-kpi-value">98%</div>
+                        <div class="userdash-kpi-note">Continuous auth confidence</div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="userdash-kpi-card">
+                        <div class="userdash-kpi-label">Endpoint Compliance</div>
+                        <div class="userdash-kpi-value">100%</div>
+                        <div class="userdash-kpi-note">EDR and patch posture healthy</div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="userdash-kpi-card">
+                        <div class="userdash-kpi-label">Active Flight Tasks</div>
+                        <div class="userdash-kpi-value">04</div>
+                        <div class="userdash-kpi-note">Assigned for this shift window</div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="userdash-kpi-card">
+                        <div class="userdash-kpi-label">Critical Security Events</div>
+                        <div class="userdash-kpi-value">0</div>
+                        <div class="userdash-kpi-note">No escalation required</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-1">
+                <div class="col-xl-8">
+                    <div class="card soc-card p-4 h-100">
+                        <div class="soc-card-header mb-2">
+                            <h5 class="mb-0 userdash-section-title">Live Connection Health</h5>
+                            <span class="soc-status-chip ok">HEALTHY</span>
+                        </div>
+                        <p class="small-muted mb-3 userdash-note">
+                            Session quality score built from identity risk, endpoint signals, route integrity, and access behavior.
+                        </p>
+
+                        <div class="userdash-health-item">
+                            <div class="userdash-health-head">
+                                <span>Authentication Assurance</span>
+                                <strong>99%</strong>
+                            </div>
+                            <div class="userdash-health-bar"><span style="--score: 99;"></span></div>
+                        </div>
+
+                        <div class="userdash-health-item">
+                            <div class="userdash-health-head">
+                                <span>Traffic Integrity</span>
+                                <strong>97%</strong>
+                            </div>
+                            <div class="userdash-health-bar"><span style="--score: 97;"></span></div>
+                        </div>
+
+                        <div class="userdash-health-item">
+                            <div class="userdash-health-head">
+                                <span>Endpoint Hygiene</span>
+                                <strong>100%</strong>
+                            </div>
+                            <div class="userdash-health-bar"><span style="--score: 100;"></span></div>
+                        </div>
+
+                        <div class="userdash-health-item">
+                            <div class="userdash-health-head">
+                                <span>Policy Compliance</span>
+                                <strong>96%</strong>
+                            </div>
+                            <div class="userdash-health-bar"><span style="--score: 96;"></span></div>
+                        </div>
+
+                        <p class="userdash-health-note mb-0">
+                            Baseline thresholds: warning below 90%, escalation below 80%.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-xl-4">
+                    <div class="card soc-card p-4 h-100">
+                        <h5 class="mb-1 userdash-section-title">Recent Security Activity</h5>
+                        <p class="small-muted mb-0 userdash-note">Last 30 minutes in your network zone</p>
+                        <ul class="userdash-timeline">
+                            <li>
+                                MFA token refreshed successfully
+                                <span class="userdash-time">2 min ago</span>
+                            </li>
+                            <li>
+                                Session heartbeat verified at gateway edge
+                                <span class="userdash-time">8 min ago</span>
+                            </li>
+                            <li>
+                                Flight-plan API request signed and approved
+                                <span class="userdash-time">14 min ago</span>
+                            </li>
+                            <li>
+                                Endpoint trust policy revalidated
+                                <span class="userdash-time">21 min ago</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-1">
+                <div class="col-xl-6">
+                    <div class="card soc-card p-4 h-100">
+                        <h5 class="mb-1 userdash-section-title">Operator Quick Actions</h5>
+                        <p class="small-muted mb-0 userdash-note">Common controls for operational and security workflows.</p>
+
+                        <div class="userdash-action-grid">
+                            <a href="/userdashboard" class="btn btn-primary btn-sm">Open Flight Plan Queue</a>
+                            <a href="/user/network-status" class="btn btn-secondary btn-sm">View Network Status</a>
+                            <a href="/landing_control.html" class="btn btn-secondary btn-sm">Manage Landing Queue</a>
+                            <a href="/alerts_warnings.html" class="btn btn-secondary btn-sm">Open Alerts Console</a>
+                            <button class="btn btn-secondary btn-sm" type="button" disabled>Trigger Policy Recheck</button>
+                            <a href="/logout" class="btn btn-danger btn-sm">Secure Logout</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-6">
+                    <div class="card soc-card p-4 h-100">
+                        <h5 class="mb-1 userdash-section-title">Access Scope & Compliance</h5>
+                        <p class="small-muted mb-0 userdash-note">Current permissions under airport SOC governance profile.</p>
+                        <ul class="userdash-policy-list">
+                            <li>Route-level access: Assigned departures and arrivals for active shift</li>
+                            <li>Data export policy: Restricted, audit logging enforced</li>
+                            <li>Command permissions: Read and operational updates only</li>
+                            <li>Idle timeout: 5-minute inactivity auto session lock</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <p class="soc-footer">© 2026 Security Operations Center | User Operations Security Dashboard</p>
+        </main>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-start soc-offcanvas" tabindex="-1" id="userMobileSidebar" aria-labelledby="userMobileSidebarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="userMobileSidebarLabel">User Navigation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <nav class="nav flex-column">
+            <a class="nav-link active" href="/userdashboard">📊 Dashboard</a>
+            <a class="nav-link" href="/user/network-status">📡 Network Status</a>
+            <a class="nav-link" href="/landing_control.html">🛬 Landing & Runway Control</a>
+            <a class="nav-link" href="/alerts_warnings.html">🚨 Alerts & Warnings</a>
+            <a class="nav-link" href="#" aria-disabled="true">🛡 Security Policy</a>
+            <a class="nav-link" href="/logout">🚪 Logout</a>
+        </nav>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/soc-ux.js') }}"></script>
+<script>
+    (function updateLiveTime() {
+        const liveTimeEl = document.getElementById("userdash-live-time");
+        if (!liveTimeEl) {
+            return;
+        }
+
+        const formatter = new Intl.DateTimeFormat("en-IN", {
+            timeZone: "Asia/Kolkata",
+            month: "short",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true
+        });
+
+        const render = () => {
+            liveTimeEl.textContent = `${formatter.format(new Date())} IST`;
+        };
+
+        render();
+        setInterval(render, 1000);
+    })();
+</script>
+<script src="/session-timeout.js"></script>
+</body>
+</html>

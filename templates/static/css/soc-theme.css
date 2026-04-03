@@ -1,0 +1,304 @@
+:root {
+    --bg-color: #050a14;
+    --glass-bg: rgba(13, 20, 35, 0.65);
+    --glass-border: rgba(56, 189, 248, 0.25);
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --accent: #38bdf8;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --card-bg: rgba(15, 23, 42, 0.5);
+    --card-hover: rgba(56, 189, 248, 0.08);
+}
+
+body.soc-page {
+    font-family: 'Inter', 'Space Grotesk', sans-serif;
+    background: radial-gradient(circle at 15% 50%, rgba(37, 99, 235, 0.1), transparent 45%),
+        radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.1), transparent 40%),
+        var(--bg-color);
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+/* Typography Overrides */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.soc-title {
+    color: var(--text-main) !important;
+}
+
+p,
+span,
+div,
+.small-muted,
+.soc-subtitle {
+    color: var(--text-muted);
+}
+
+strong {
+    color: var(--text-main);
+}
+
+/* Topbar Background */
+.soc-topbar {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+/* Sidebar Background */
+.soc-sidebar {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-right: 1px solid var(--glass-border);
+    min-height: calc(100vh - 56px);
+    /* account for topbar height */
+}
+
+/* Links */
+.soc-sidebar .nav-link,
+.soc-offcanvas .nav-link {
+    color: var(--text-muted);
+    transition: all 0.3s ease;
+}
+
+.soc-sidebar .nav-link:hover,
+.soc-offcanvas .nav-link:hover {
+    color: var(--accent);
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.soc-sidebar .nav-link.active,
+.soc-offcanvas .nav-link.active {
+    color: var(--text-main) !important;
+    background: rgba(56, 189, 248, 0.1);
+    border-left: 3px solid var(--accent);
+}
+
+/* Dashboard Cards */
+.soc-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.soc-card:hover {
+    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.7);
+}
+
+/* Summary Cards (Hoverable) */
+.soc-hover-card {
+    background: var(--card-bg);
+}
+
+.soc-hover-card:hover {
+    background: var(--card-hover);
+    transform: translateY(-2px);
+    border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* Tables */
+table.table-soc {
+    color: var(--text-main);
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+table.table-soc thead th {
+    background: rgba(15, 23, 42, 0.8) !important;
+    color: var(--text-main) !important;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+table.table-soc tbody td {
+    background: transparent !important;
+    color: var(--text-muted) !important;
+    border-color: rgba(148, 163, 184, 0.1);
+}
+
+table.table-soc tbody tr:hover td {
+    background: rgba(56, 189, 248, 0.05) !important;
+    color: var(--text-main) !important;
+}
+
+/* Offcanvas Mobile Menu */
+.soc-offcanvas {
+    background: var(--bg-color);
+    color: var(--text-main);
+    border-right: 1px solid var(--glass-border);
+}
+
+.offcanvas-title {
+    color: var(--text-main) !important;
+}
+
+.btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* SOC Metrics & KPIs */
+.soc-metric {
+    font-size: 2.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+    font-family: 'Space Grotesk', sans-serif;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+.soc-metric.soc-metric-primary {
+    color: var(--accent);
+    text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+.soc-metric.soc-metric-ok,
+.soc-metric.ok {
+    color: #22c55e;
+    text-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+}
+
+.soc-metric.soc-metric-warn,
+.soc-metric.warn {
+    color: #eab308;
+    text-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
+}
+
+.soc-metric.soc-metric-critical,
+.soc-metric.critical {
+    color: #ef4444;
+    text-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+/* Threat Items */
+.threat-item {
+    background: var(--card-bg);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.threat-item.ok {
+    border-left: 4px solid #22c55e;
+}
+
+.threat-item.warn {
+    border-left: 4px solid #eab308;
+}
+
+.threat-item.critical {
+    border-left: 4px solid #ef4444;
+}
+
+/* Footers */
+.soc-footer {
+    color: rgba(148, 163, 184, 0.5) !important;
+    font-size: 0.8rem;
+    text-align: center;
+    margin-top: 2rem;
+    padding-bottom: 1rem;
+}
+
+/* Map specific items */
+.soc-map-wrap {
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* Overriding any local hardcoded text colors in dashboard pages */
+.text-dark {
+    color: var(--text-main) !important;
+}
+
+.text-secondary {
+    color: var(--text-muted) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* Loaders */
+.soc-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* Flight Travel Plans Elements */
+.flight-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    height: 100%;
+    transition: transform 0.3s ease, border-color 0.3s;
+}
+
+.flight-card h6 {
+    color: var(--text-main);
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.flight-route {
+    color: var(--accent);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.flight-time {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-family: monospace;
+    margin-bottom: 0.75rem;
+}
+
+.flight-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.flight-status.on-time {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.flight-status.delayed {
+    background: rgba(234, 179, 8, 0.15);
+    color: #facc15;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.flight-status.cancelled {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}

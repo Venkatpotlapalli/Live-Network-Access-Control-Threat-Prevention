@@ -1,0 +1,74 @@
+from flask import Flask, render_template, request
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
+
+app = Flask(__name__)
+
+def get_db():
+    return sqlite3.connect("users.db")
+
+def init_db():
+    db = get_db()
+    cur = db.cursor()
+
+    # Create table
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL
+        )
+    """)
+
+    # 10 users
+    users = [
+        ("admin", "admin123"),
+        ("operator1", "op123"),
+        ("operator2", "op234"),
+        ("analyst1", "ana123"),
+        ("analyst2", "ana234"),
+        ("socuser1", "soc123"),
+        ("socuser2", "soc234"),
+        ("viewer1", "view123"),
+        ("viewer2", "view234"),
+        ("guest", "guest123")
+    ]
+
+    for username, password in users:
+        hashed = generate_password_hash(password)
+        try:
+            cur.execute(
+                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                (username, hashed)
+            )
+        except sqlite3.IntegrityError:
+            pass  # user already exists
+
+    db.commit()
+    db.close()
+
+@app.route("/", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        db = get_db()
+        cur = db.cursor()
+        cur.execute(
+            "SELECT password_hash FROM users WHERE username=?",
+            (username,)
+        )
+        user = cur.fetchone()
+        db.close()
+
+        if user and check_password_hash(user[0], password):
+            return "✅ Login Successful"
+        else:
+            return "❌ Invalid Username or Password"
+
+    return render_template("login.html")
+
+if __name__ == "__main__":
+    init_db()
+    app.run(debug=True)

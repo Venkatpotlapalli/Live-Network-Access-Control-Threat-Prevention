@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Airport Network Status Monitor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #020617;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .navbar {
+            background: #020617;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .sidebar {
+            background: #020617;
+            border-right: 1px solid #1e293b;
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #ffffff;
+            padding: 12px 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .card {
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            color: #ffffff;
+        }
+
+        .table {
+            color: #ffffff;
+            border-color: #2f2f2f;
+        }
+
+        .table th {
+            color: #ffffff;
+            background: #161616 !important;
+            border-color: #2f2f2f !important;
+        }
+
+        .table td {
+            color: #ffffff;
+            background: #111111 !important;
+            border-color: #2f2f2f !important;
+        }
+
+        .status-ok {
+            color: #22c55e;
+            font-weight: 600;
+        }
+
+        .status-warn {
+            color: #facc15;
+            font-weight: 600;
+        }
+
+        .status-critical {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .small-muted {
+            color: #ffffff;
+            font-size: 0.85rem;
+        }
+
+        .board-title {
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            color: #93c5fd;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-dark px-4 d-flex justify-content-between">
+        <span class="navbar-brand">📡 Airport Network Status Monitor</span>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="small-muted" id="live-clock">--:--:--</span>
+            <a href="/user" class="btn btn-secondary btn-sm">⬅ Back</a>
+            <a href="/logout" class="btn btn-danger btn-sm">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 sidebar">
+                <a href="/userdashboard">📊 Dashboard</a>
+                <a href="/user/network-status" class="active">📡 Network Status</a>
+                <a href="#">🛡 Security Policy</a>
+                <a href="/logout">🚪 Logout</a>
+            </div>
+
+            <div class="col-md-10 p-4">
+                <h4>Live Airport Operations Feed</h4>
+                <p class="small-muted">Displays what operators usually see on airport monitoring screens.</p>
+
+                <div class="row mt-3">
+                    <div class="col-md-4 mb-3">
+                        <div class="card p-3">
+                            <div class="board-title">Terminal Network</div>
+                            <h5 id="terminal-network" class="status-ok">OPERATIONAL</h5>
+                            <p class="small-muted mb-0">Check-in kiosks, gate displays, baggage scanners</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card p-3">
+                            <div class="board-title">Security Channel</div>
+                            <h5 id="security-channel" class="status-ok">STABLE</h5>
+                            <p class="small-muted mb-0">Access control, badge readers, CCTV stream links</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card p-3">
+                            <div class="board-title">Flight Data Link</div>
+                            <h5 id="flight-data-link" class="status-warn">HIGH TRAFFIC</h5>
+                            <p class="small-muted mb-0">Departure board sync and airline feed exchange</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-4 mb-4">
+                    <h5>Airport Service Nodes</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Node</th>
+                                    <th>Zone</th>
+                                    <th>Latency</th>
+                                    <th>Packet Loss</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nodes-body">
+                                <tr>
+                                    <td>Check-In Cluster A</td>
+                                    <td>T1</td>
+                                    <td>14 ms</td>
+                                    <td>0.2%</td>
+                                    <td class="status-ok">HEALTHY</td>
+                                </tr>
+                                <tr>
+                                    <td>Baggage Conveyor Control</td>
+                                    <td>Sorting Bay</td>
+                                    <td>21 ms</td>
+                                    <td>0.8%</td>
+                                    <td class="status-warn">DEGRADED</td>
+                                </tr>
+                                <tr>
+                                    <td>Gate Display Backbone</td>
+                                    <td>Concourse C</td>
+                                    <td>16 ms</td>
+                                    <td>0.1%</td>
+                                    <td class="status-ok">HEALTHY</td>
+                                </tr>
+                                <tr>
+                                    <td>Security Scan Grid</td>
+                                    <td>Security Hall</td>
+                                    <td>29 ms</td>
+                                    <td>1.6%</td>
+                                    <td class="status-warn">MONITOR</td>
+                                </tr>
+                                <tr>
+                                    <td>ATC Data Relay</td>
+                                    <td>Control Tower</td>
+                                    <td>11 ms</td>
+                                    <td>0.0%</td>
+                                    <td class="status-ok">HEALTHY</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card p-4">
+                    <h5>Passenger Information Display Feed</h5>
+                    <p class="small-muted">Sample board similar to airport monitor screens.</p>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Flight</th>
+                                    <th>Destination</th>
+                                    <th>Gate</th>
+                                    <th>Scheduled</th>
+                                    <th>Estimated</th>
+                                    <th>Network Feed</th>
+                                </tr>
+                            </thead>
+                            <tbody id="flight-feed-body">
+                                <tr>
+                                    <td>AI-101</td>
+                                    <td>Mumbai</td>
+                                    <td>A12</td>
+                                    <td>06:30</td>
+                                    <td>06:35</td>
+                                    <td class="status-ok">SYNCED</td>
+                                </tr>
+                                <tr>
+                                    <td>6E-221</td>
+                                    <td>Chennai</td>
+                                    <td>B04</td>
+                                    <td>07:15</td>
+                                    <td>07:35</td>
+                                    <td class="status-warn">DELAY PUSH</td>
+                                </tr>
+                                <tr>
+                                    <td>UK-330</td>
+                                    <td>Pune</td>
+                                    <td>C02</td>
+                                    <td>09:00</td>
+                                    <td>09:00</td>
+                                    <td class="status-ok">SYNCED</td>
+                                </tr>
+                                <tr>
+                                    <td>SG-441</td>
+                                    <td>Delhi</td>
+                                    <td>D09</td>
+                                    <td>11:20</td>
+                                    <td>11:20</td>
+                                    <td class="status-critical">FEED RETRY</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const liveClockEl = document.getElementById("live-clock");
+        const terminalNetworkEl = document.getElementById("terminal-network");
+        const securityChannelEl = document.getElementById("security-channel");
+        const flightDataLinkEl = document.getElementById("flight-data-link");
+        const statusVariants = [
+            { text: "OPERATIONAL", cls: "status-ok" },
+            { text: "HIGH TRAFFIC", cls: "status-warn" },
+            { text: "DEGRADED", cls: "status-warn" },
+            { text: "ALERT", cls: "status-critical" },
+        ];
+
+        function setStatus(el, variant) {
+            el.classList.remove("status-ok", "status-warn", "status-critical");
+            el.classList.add(variant.cls);
+            el.textContent = variant.text;
+        }
+
+        function refreshClock() {
+            liveClockEl.textContent = new Date().toLocaleString("en-IN", {
+                timeZone: "Asia/Kolkata",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true
+            }) + " IST";
+        }
+
+        function rotateNetworkStatus() {
+            const seed = Date.now();
+            const a = statusVariants[Math.floor(seed / 7000) % statusVariants.length];
+            const b = statusVariants[Math.floor(seed / 11000 + 1) % statusVariants.length];
+            const c = statusVariants[Math.floor(seed / 9000 + 2) % statusVariants.length];
+            setStatus(terminalNetworkEl, a);
+            setStatus(securityChannelEl, b);
+            setStatus(flightDataLinkEl, c);
+        }
+
+        refreshClock();
+        rotateNetworkStatus();
+        setInterval(refreshClock, 1000);
+        setInterval(rotateNetworkStatus, 7000);
+    </script>
+
+    <script src="/session-timeout.js"></script>
+</body>
+
+</html>

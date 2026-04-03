@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Defense Actions Console | SOC Command Region</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #030712;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(56, 189, 248, 0.2);
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-bg: rgba(15, 23, 42, 0.85);
+
+            --status-nominal: #22c55e;
+            --status-caution: #eab308;
+            --status-emergency: #ef4444;
+            --status-info: #0ea5e9;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 50% 10%, rgba(2, 132, 199, 0.1) 0%, transparent 60%), var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+        }
+
+        /* Command Header */
+        header.command-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .brand-ops {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .radar-pulse {
+            width: 10px;
+            height: 10px;
+            background-color: var(--status-nominal);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--status-nominal);
+            animation: pulse-nominal 2s infinite;
+        }
+
+        @keyframes pulse-nominal {
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+
+        /* Layout */
+        .soc-layout {
+            display: flex;
+            flex: 1;
+        }
+
+        .soc-sidebar {
+            width: 260px;
+            background: var(--glass-bg);
+            border-right: 1px solid var(--glass-border);
+            padding: 1.5rem 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .soc-sidebar nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .soc-sidebar nav a:hover {
+            color: var(--accent);
+            background: rgba(56, 189, 248, 0.05);
+            border-left-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .soc-sidebar nav a.active {
+            color: var(--text-main);
+            background: rgba(56, 189, 248, 0.1);
+            border-left-color: var(--accent);
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+        }
+
+        .soc-main {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Panels */
+        .ops-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .ops-header {
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .ops-header h4 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+        }
+
+        /* Telemetry Status Strip */
+        .status-strip {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .status-item .label {
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .status-item .val {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* Defense Table specifics */
+        .table-defense {
+            --bs-table-bg: transparent;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        .table-defense th {
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            padding-bottom: 0.75rem;
+        }
+
+        .table-defense td {
+            border-bottom: 1px solid rgba(148, 163, 184, 0.05);
+            vertical-align: middle;
+            padding: 1rem 0.5rem;
+        }
+
+        .ip-badge {
+            font-family: monospace;
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--status-emergency);
+            text-shadow: 0 0 5px rgba(239, 68, 68, 0.4);
+        }
+
+        .geo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            background: rgba(148, 163, 184, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: #cbd5e1;
+        }
+
+        .geo-high {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .reason-box {
+            font-size: 0.8rem;
+            line-height: 1.3;
+            color: var(--text-main);
+        }
+
+        .reason-code {
+            font-family: monospace;
+            color: var(--accent);
+            font-size: 0.75rem;
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+
+        .duration-box {
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .duration-val {
+            font-family: monospace;
+            color: var(--status-caution);
+        }
+
+        .btn-override {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: var(--status-nominal);
+            font-size: 0.75rem;
+            font-family: 'Space Grotesk', sans-serif;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 0.4rem 0.75rem;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+
+        .btn-override:hover {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.6);
+            color: #fff;
+            text-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+        }
+
+        .btn-override:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Loader */
+        #ops-loader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-color);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+            color: var(--accent);
+            font-family: 'Space Grotesk', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .loader-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(56, 189, 248, 0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Sweet Alert override for dark theme */
+        .soc-swal-popup {
+            background: var(--card-bg) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--glass-border) !important;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .soc-swal-popup .swal2-title {
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--accent) !important;
+        }
+
+        .soc-swal-popup .swal2-html-container {
+            color: var(--text-muted) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ops-loader">
+        <div class="loader-spinner"></div>
+        <div>Loading Defense Actions Console...</div>
+    </div>
+
+    <!-- Command Header -->
+    <header class="command-header">
+        <div class="brand-ops">
+            <span class="radar-pulse"
+                style="background: var(--status-caution); box-shadow: 0 0 8px var(--status-caution); animation: pulse-nominal 2s infinite;"></span>
+            AF-NOC | Defense Actions Console
+        </div>
+        <div>
+            <a href="/logout" class="btn btn-outline-danger btn-sm text-uppercase"
+                style="letter-spacing: 1px; font-size: 0.75rem;">Terminate Session</a>
+        </div>
+    </header>
+
+    <div class="soc-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="soc-sidebar d-none d-md-flex">
+            <nav>
+                <a href="/overview.html">📊 Operations Overview</a>
+                <a href="/admin/threat-alerts">🚨 Threat Telemetry</a>
+                <a href="/admin/network-monitoring">📡 Link Status</a>
+                <a href="/admin/endpoint-activity">🖥 Operator Sessions</a>
+                <a href="/admin/logs-forensics">📋 Forensic Records</a>
+                <a href="/admin/blocked-ips" class="active">🚫 Auto-Mitigation</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="soc-main">
+
+            <div class="status-strip">
+                <div class="status-item"><span class="label">Defense Posture:</span> <span
+                        class="val text-warning">ELEVATED / AUTO-MITIGATION ON</span></div>
+                <div class="status-item"><span class="label">Block Rule Scope:</span> <span class="val text-info">GLOBAL
+                        INGRESS</span></div>
+                <div class="status-item"><span class="label">Active Rules:</span> <span class="val text-success">4
+                        CRITICAL</span></div>
+                <div class="status-item ms-auto"><span class="label">Syncing Engine...</span></div>
+            </div>
+
+            <article class="ops-panel flex-grow-1 d-flex flex-column">
+                <div class="ops-header">
+                    <div>
+                        <h4>Automated Defense Matrix (Active Blocks)</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Real-time registry of quarantined IP
+                            vectors neutralized by correlation engine.</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive flex-grow-1">
+                    <table class="table table-defense table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">Log ID</th>
+                                <th style="width: 20%;">Vector IP Origin</th>
+                                <th style="width: 15%;">Geo-Risk Indicator</th>
+                                <th style="width: 30%;">Block Reason Intelligence</th>
+                                <th style="width: 15%;">Duration Policy</th>
+                                <th style="width: 15%; text-align: right;">Manual Override</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blocked-body">
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted" style="font-family: monospace;">
+                                    Fetching threat mitigation ledger...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+        </main>
+    </div>
+
+    <!-- Mobile Sidebar -->
+    <div class="offcanvas offcanvas-start soc-offcanvas" tabindex="-1" id="adminMobileSidebar"
+        style="background: var(--bg-color); border-right: 1px solid var(--glass-border);">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title text-white">Command Navigation</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <nav class="soc-sidebar w-100 h-100 pb-4 border-0" style="background: transparent;">
+                <a href="/overview.html">📊 Operations Overview</a>
+                <a href="/admin/threat-alerts">🚨 Threat Telemetry</a>
+                <a href="/admin/network-monitoring">📡 Link Status</a>
+                <a href="/admin/endpoint-activity">🖥 Operator Sessions</a>
+                <a href="/admin/logs-forensics">📋 Forensic Records</a>
+                <a href="/admin/blocked-ips" class="active">🚫 Auto-Mitigation</a>
+            </nav>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const loader = document.getElementById("ops-loader");
+            if (loader) {
+                setTimeout(() => {
+                    loader.style.opacity = "0";
+                    setTimeout(() => loader.style.display = "none", 500);
+                }, 400);
+            }
+        });
+
+        const blockedBodyEl = document.getElementById("blocked-body");
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+        }
+
+        // Faux Geo and Reason based on IP hash for realism
+        function deriveThreatIntel(ip) {
+            const hash = Array.from(ip).reduce((s, c) => s + c.charCodeAt(0), 0);
+
+            const regions = [
+                { geo: "UNKNOWN / TOR IP", cls: "geo-high" },
+                { geo: "O/S REGION 12", cls: "geo-high" },
+                { geo: "N/A DATACENTER", cls: "" },
+                { geo: "PROXY NODE 4A", cls: "geo-high" }
+            ];
+
+            const reasons = [
+                { code: "AUTH-BRUTE-01", desc: "Excessive failed authentications (Threshold: 7 attempts/10min)." },
+                { code: "PAYLOAD-XSS-02", desc: "Malicious payload signature detected in API post request." },
+                { code: "SCAN-REC-03", desc: "Aggressive port scanning behavior detected against perimeter." },
+                { code: "CREDS-STUFF-04", desc: "Credential stuffing campaign matching historic blacklists." }
+            ];
+
+            return {
+                geo: regions[hash % regions.length],
+                reason: reasons[hash % reasons.length],
+                durationHrs: (hash % 48) + 12 // 12 to 60 hours
+            };
+        }
+
+        function renderBlocked(blocked) {
+            if (!blocked || !blocked.length) {
+                blockedBodyEl.innerHTML = "<tr><td colspan='6' class='text-center py-5' style='color: var(--status-nominal); font-family: monospace;'><div style='font-size: 1.5rem; margin-bottom: 0.5rem;'>✓</div><div>ZERO ACTIVE QUARANTINES</div><div style='font-size: 0.8rem; color: var(--text-muted);'>No IPs currently restricted by defense policies.</div></td></tr>";
+                return;
+            }
+
+            blockedBodyEl.innerHTML = blocked.map((item) => {
+                const ipAddress = String(item.ip_address || "");
+                const intel = deriveThreatIntel(ipAddress);
+                const encodedIp = encodeURIComponent(ipAddress);
+
+                return `
+                <tr>
+                    <td><span style="font-family: monospace; color: var(--text-muted);">Q-${item.id}</span></td>
+                    <td><div class="ip-badge">${escapeHtml(ipAddress)}</div></td>
+                    <td>
+                        <div class="geo-badge ${intel.geo.cls}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg>
+                            ${intel.geo.geo}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="reason-box">
+                            <span class="reason-code">${intel.reason.code}</span>
+                            ${intel.reason.desc}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="duration-box">
+                            <div><span style="color: var(--text-muted);">Policy:</span> TEMPORARY</div>
+                            <div><span style="color: var(--text-muted);">Hold Time:</span> <span class="duration-val">${intel.durationHrs} HRS</span></div>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <button type="button" class="btn-override unblock-ip-btn" data-ip="${encodedIp}">OVERRIDE</button>
+                    </td>
+                </tr>
+            `;
+            }).join("");
+        }
+
+        async function unblockIp(ipAddress) {
+            const response = await fetch("/api/soc/unblock-ip", {
+                method: "POST", headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+                body: JSON.stringify({ ip_address: ipAddress })
+            });
+
+            let payload = {};
+            try { payload = await response.json(); } catch (error) { }
+
+            if (!response.ok) {
+                const reason = payload.error ? ` (${payload.error})` : "";
+                throw new Error(`Execution Denied: Unable to unblock ${ipAddress}${reason}`);
+            }
+        }
+
+        async function confirmUnblock(ipAddress) {
+            if (window.Swal && typeof window.Swal.fire === "function") {
+                const result = await window.Swal.fire({
+                    icon: "warning",
+                    title: "MANUAL OVERRIDE INITIATED",
+                    html: `Confirm removal of <b style="color: var(--status-emergency); font-family: monospace;">${ipAddress}</b> from active quarantine matrix. This action logs directly to your operator ID.`,
+                    showCancelButton: true,
+                    confirmButtonText: "EXECUTE OVERRIDE",
+                    cancelButtonText: "ABORT ACTION",
+                    confirmButtonColor: "var(--status-nominal)",
+                    cancelButtonColor: "var(--status-emergency)",
+                    customClass: { popup: "soc-swal-popup" }
+                });
+                return result.isConfirmed;
+            }
+            return window.confirm(`Override block for IP ${ipAddress}?`);
+        }
+
+        blockedBodyEl.addEventListener("click", async (event) => {
+            const trigger = event.target.closest(".unblock-ip-btn");
+            if (!trigger) return;
+
+            const encodedIp = trigger.getAttribute("data-ip") || "";
+            const ipAddress = decodeURIComponent(encodedIp);
+            if (!ipAddress) return;
+
+            const proceed = await confirmUnblock(ipAddress);
+            if (!proceed) return;
+
+            trigger.disabled = true;
+            try {
+                await unblockIp(ipAddress);
+                await refreshBlockedList();
+                if (window.Swal) {
+                    Swal.fire({
+                        icon: "success", title: "OVERRIDE SUCCESSFUL",
+                        text: `Vector ${ipAddress} released from quarantine.`,
+                        background: 'var(--card-bg)', color: 'var(--text-main)', timer: 1500, showConfirmButton: false
+                    });
+                }
+            } catch (error) {
+                if (window.Swal) {
+                    Swal.fire({
+                        icon: "error", title: "OVERRIDE FAILED",
+                        text: error.message,
+                        background: 'var(--card-bg)', color: 'var(--text-main)'
+                    });
+                }
+                trigger.disabled = false;
+            }
+        });
+
+        async function refreshBlockedList() {
+            try {
+                const response = await fetch("/api/soc/overview", {
+                    method: "GET", cache: "no-store", headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    renderBlocked(data.blocked || []);
+                }
+            } catch (error) {
+                console.error("Failed to sync mitigation ledger");
+            }
+        }
+
+        refreshBlockedList();
+        setInterval(refreshBlockedList, 5000);
+    </script>
+    <script src="/session-timeout.js"></script>
+</body>
+
+</html>
